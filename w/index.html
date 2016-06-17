@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html >
+  <head>
+    <meta charset="UTF-8">
+    <title>CryptX</title>
+    
+    
+    
+    
+        <link rel="stylesheet" href="css/style.css">
+
+    
+    
+    
+  </head>
+
+  <body>
+
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  Please send donations to bitaddress.org, not to us. WarpWallet is inspired by their project and includes some
+  of their code.
+
+      1NiNja1bUmhSoTXozBRBEtR8LeF9TGbZBN
+
+  This project, software and embedded resources are copyright CrashMix LLC ("maxchris" -> "crashmix"; get it?)
+
+  The WarpWallet name and logo are not part of the open source license.
+
+  Portions of the all-in-one HTML document contain JavaScript codes that are the copyrights of others.
+  The individual copyrights are included throughout the document along with their licenses.
+  Included JavaScript libraries are separated with HTML script tags.
+
+  JavaScript block      License
+  *******************   ***************
+  jQuery                https://github.com/jquery/jquery/blob/master/MIT-LICENSE.txt
+  bootstrap (CSS)       https://github.com/twbs/bootstrap/blob/master/LICENSE
+  browserify            https://github.com/substack/node-browserify/blob/master/LICENSE
+  qrcode.js             MIT (http://davidshimjs.github.io/qrcodejs/)
+  bitaddress.org        https://github.com/pointbiz/bitaddress.org/blob/master/README (MIT)
+    - CryptoJS          https://code.google.com/p/crypto-js/wiki/License (BSD)
+    - JSBN              http://www-cs-students.stanford.edu/~tjw/jsbn/LICENSE (BSD)
+    - Bitcoin           https://github.com/bitcoinjs/bitcoinjs-lib/blob/master/LICENSE (MIT)
+    - EllipticCurve     BSD
+
+  In turn, bitaddress.org has some inline dependencies, which it references
+
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  WarpWallet is available under the BSD-3 License
+
+  Copyright (c) 2013, CrashMix LLC
+
+  All rights reserved.
+
+  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+  3. Neither the name of CrashMix nor WarpWallet, nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+    
+<!-- ########################################################################################## -->
+
+<body>
+
+<div class="container">
+
+  <div class="row">
+    <div class="col-md-12">
+     <center>  <img src=https://pp.vk.me/c630524/v630524534/3434e/Y1xJ2d0q4mk.jpg width="100%" height="300" </center>
+      <h1><span class="second-half"></span></h1>
+      <form class="form-horizontal form-container" role="form">
+        <div class="form-group">
+          <label for="passphrase" class="col-md-4 control-label">придумай пароль</label>
+          <div class="col-md-8">
+            <input id="passphrase" class="form-control">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="salt" class="col-md-4 control-label salt-label">почта(необязательно) [<a class="what-salt" href="#what-salt">зачем</a>]</label>
+          <div class="col-md-8">
+            <input id="salt" class="form-control">
+          </div>
+        </div>
+        <div class="form-group salt-confirm chefckbox" style="display:none;">
+          <div class="col-md-8 col-md-offset-4">
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" id="checkbox-salt-confirm">  <span class="salt-summary"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group salt-explanation" style="display:none;">
+          <div class="col-md-8 col-md-offset-4">
+            <p>
+                
+                [<a class="what-salt" href="#what-salt">Ok</a>]
+            </p>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="col-md-8 col-md-offset-4">
+            <button type="button" class="btn btn-success" id="btn-submit" disabled="true">СОЗДАТЬ КОШЕЛЁК</button>
+            <button type="button" class="btn btn-danger" id="btn-reset">НЕ СОЗДАТЬ</button>
+          </div>
+        </div>
+        <div class="form-group progress-form" style="display:none;">
+          <div class="bar" style="width:10%;">
+            <span class="progress-scrypt"></span>
+            <span class="progress-pbkdf2"></span>
+          </div>
+        </div>
+        <div class="output-form" style="display:none;">
+          <div class="form-group">
+            <label for="public-address" class="col-md-4 control-label">Public bitcoin address</label>
+            <div class="col-md-8">
+              <input id="public-address" readonly class="form-control">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="private-key" class="col-md-4 control-label">Private key <span class="sub-label">(Приватный ключ)</span></label>
+            <div class="col-md-8">
+              <input id="private-key" readonly class="form-control">
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="col-md-6">
+              <h5>Public address QR Code</h5>
+              <div id="public-address-qr"></div>
+            </div>
+            <div class="col-md-6 col-private-key-qr">
+              <h5>Private key QR Code (Wallet Import Format)</h5>
+              <div id="private-key-qr"></div>
+            </div>
+
+          </div>
+        </div>
+      </form>
+    </div>
+  </div><!-- /row -->
+</div><!-- /container -->
+
+<div class="footer">
+
+  <div class="container">
+    <div class="row sub-row">
+      <div class="col col-md-4">
+     <center>  <strong> <h4>/>_СКРИПТ ГЕНЕРАЦИИ КОШЕЛЬКА</h4> </strong> </center>
+        <p>
+         
+        </p>
+
+        <table class="table table-condensed" style="font-size:1.0em;">
+          <tr><td valign="top" align="right">s<sub>1</sub></td>     <td valign="top">=</td><td valign="top" align="left">scrypt(key=(passphrase||<tt>0x1</tt>), salt=(salt||<tt>0x1</tt>), N=2<sup>18</sup>, r=8, p=1, dkLen=32)</td></tr>
+          <tr><td valign="top" align="right">s<sub>2</sub></td>     <td valign="top">=</td><td valign="top" align="left">pbkdf2(key=(passphrase||<tt>0x2</tt>), salt=(salt||<tt>0x2</tt>), c=2<sup>16</sup>, dkLen=32, prf=HMAC_SHA256)</td></tr>
+          <tr><td valign="top" align="right">keypair</td><td valign="top">=</td><td valign="top" align="left">generate_bitcoin_keypair(s<sub>1</sub> &oplus; s<sub>2</sub>)</td></tr>
+        </table>
+        
+        
+
+      </div>
+
+
+      <div class="col col-md-4">
+      
+
+      </div><!-- /footer column -->
+    </div>
+    <hr>
+    <br /><br /><br />
+    <div style="text-align:center;">
+      <img  width="350" height="50" src=http://www.differencebetween.info/sites/default/files/images/barcode.jpg  
+      <br /><br />
+      <script>document.write(package.version)</script> <br />
+     <strong> <a href="https://keybase.io/warp/keybase-code-signing-key-2013.asc">СКАЧАТЬ В ASC
+        </a><br /> </strong>
+      <a href="https://keybase.io/warp/release.txt">В TXT</a> 
+    </div>
+    <br /><br /><br />
+  </div><!-- /container -->
+
+</div><!-- /footer -->
+    
+        <script src="js/index.js"></script>
+
+    
+    
+    
+  </body>
+</html>

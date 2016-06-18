@@ -267,7 +267,7 @@ input[type="submit"].btn-block,input[type="reset"].btn-block,input[type="button"
 body {
   font-family: 'helvetica neue', 'helvetica', 'arial';
   background-repeat: repeat-x repeat-y;
-  background-color:#ccc;
+  background-color:#F0F0F0;
 }
 .footer {
   background-color:#aaa;

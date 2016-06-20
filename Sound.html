@@ -1,0 +1,766 @@
+
+<!-- saved from url=(0053)http://oacdesigns.github.io/bitcoin-sound-visualiser/ -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function blockPopupsFunc(popupBlockMessage, showNotification, extensionId, rules) {
+    var stndz = {
+        originalWindowOpen: window.open,
+        originalDocumentCreateElement: document.createElement,
+        originalDocumentCreateEvent: document.createEvent,
+        lastCreatedAnchor: undefined,
+        lastCreatedAnchorTime: undefined,
+        allowed: false
+    };
+
+    var popupRegexRules = null;
+    function isPopup(url) {
+        if (popupRegexRules == null) {
+            popupRegexRules = [];
+            for (var i = 0; i < rules.length; i++) {
+                popupRegexRules.push(new RegExp(rules[i], "i"));
+            }
+        }
+
+        for (var i = 0; i < popupRegexRules.length; i++) {
+            if (popupRegexRules[i].test(url))
+                return true;
+        }
+
+        return false;
+    }
+
+    var windowOpenAllowRegex = /^(http(s)?:)?\/\/([^\/]*\.)?(pinterest\.com|twitter\.com|paypal\.com|yahoo\.com|facebook\.com|linkedin\.com|salesforce\.com|amazon\.co|google\.co)/i;
+    var windowOpenAllowHosts = /^http(s):\/\/([^\/]*\.)?(search\.yahoo\.com|linkedin\.com|facebook\.com)/i;
+    window.open = function() {
+        var popupArguments = arguments;
+        var openPopupFunc = function() {
+            return stndz.originalWindowOpen.apply(window, popupArguments);
+        };
+
+        if (stndz.allowed)
+            return openPopupFunc();
+
+        var popupUrl = arguments.length >= 1 && arguments[0] && typeof arguments[0] == "string" ? arguments[0] : null;
+        var block = isPopup(popupUrl);
+        if (block) {
+            showPopupNotificationWindow('ad-popup', arguments, openPopupFunc);
+            return {};
+        }
+
+        var allow = windowOpenAllowRegex.test(popupUrl) || windowOpenAllowHosts.test(window.location.href);
+        if (allow)
+            return openPopupFunc();
+
+        var targetName = arguments.length >= 2 ? arguments[1] : null;
+        if (targetName == '_parent' || targetName == '_self' || targetName == '_top')
+            return openPopupFunc();
+
+        if (!window.event)
+            return openPopupFunc();
+
+        if (popupUrl) {
+            try {
+                if (popupUrl.indexOf("/") == 0 && popupUrl.indexOf("//") != 0)
+                    return openPopupFunc();
+
+                var windowOpenUrl = new URL(popupUrl);
+                if (windowOpenUrl.host.indexOf(window.location.host) > -1 || (windowOpenUrl.host != "" && window.location.host.indexOf(windowOpenUrl.host) > -1))
+                    return openPopupFunc();
+            } catch(e) { }
+        }
+
+        var currentTargetValid = window.event &&
+            window.event.currentTarget &&
+            window.event.currentTarget !== window &&
+            window.event.currentTarget !== document &&
+            window.event.currentTarget !== document.body;
+
+        var targetValid = window.event &&
+            window.event.target &&
+            window.event.target.tagName == 'A' &&
+            window.event.target.href.indexOf('http') == 0;
+
+        if (currentTargetValid || targetValid)
+            return openPopupFunc();
+
+        if (showNotification)
+            showPopupNotificationWindow('not-user-initiated', arguments, openPopupFunc);
+
+        return {};
+    };
+
+    window.stndzStopPopupBlocking = function(iframeGuid) {
+        if (popupBlockMessage.iframeGuid == iframeGuid) {
+            stndz.allowed = true;
+        }
+    };
+
+    window.stndzResumePopupBlocking = function(iframeGuid) {
+        if (popupBlockMessage.iframeGuid == iframeGuid) {
+            stndz.allowed = false;
+        }
+    };
+
+    document.createElement = function() {
+        var element = stndz.originalDocumentCreateElement.apply(document, arguments);
+        if (element.tagName == 'A') {
+            stndz.lastCreatedAnchorTime = new Date();
+            stndz.lastCreatedAnchor = element;
+        }
+
+        return element;
+    };
+
+    var anchorPopupsExcludedHosts = { 'sh.st': true };
+    document.createEvent = function() {
+        if (!stndz.allowed && arguments[0].toLocaleLowerCase().indexOf('mouse') > -1 && stndz.lastCreatedAnchorTime && new Date() - stndz.lastCreatedAnchorTime < 50) {
+            if (anchorPopupsExcludedHosts[document.location.host]) {
+                stndz.lastCreatedAnchor.target = "_top";
+            } else if (windowOpenAllowRegex.test(stndz.lastCreatedAnchor.href) == false) {
+                var anchor = stndz.lastCreatedAnchor;
+                showPopupNotificationWindow('create-link', null, function() { anchor.click(); });
+                return null;
+            }
+        }
+
+        return stndz.originalDocumentCreateEvent.apply(document, arguments);
+    };
+
+    window.addEventListener("message", function(event) {
+        switch (event.data.type) {
+            case 'stndz-show-popup-notification':
+                if (window !== window.top)
+                    return;
+
+                stndz.stndzPopupActionWindow = event.source;
+                stndz.stndzPopupClicked = function(option) {
+                    stndz.hidePopupNotification();
+                    stndz.stndzPopupActionWindow.postMessage({type: 'stndz-popup-action', option: option}, event.origin);
+                };
+
+                if (stndz.popupNotificationOpen) {
+                    stndz.highlightPopupNotification();
+                } else if (stndz.popupNotificationOpen === false) { // if it was previously opened just show it, the delegate to open the new window was created above
+                    stndz.showPopupNotification();
+                } else {
+                    var notificationElement = createNotificationOnPage();
+
+                    setTimeout(function() {
+                        stndz.showPopupNotification();
+                    }, 0);
+
+                    stndz.showPopupNotification = function() {
+                        stndz.popupNotificationOpen = true;
+
+                        notificationElement.style.top = '0px';
+
+                        var hidePopupNotificationId;
+                        stndz.hidePopupNotification = function() {
+                            stndz.popupNotificationOpen = false;
+                            notificationElement.style.top = '-40px';
+                            notificationElement.style.height = '30px';
+                            clearTimeout(hidePopupNotificationId);
+                        };
+
+                        hidePopupNotificationId = setTimeout(stndz.hidePopupNotification, 30 * 1000);
+                        notificationElement.onmouseover = function() {
+                            clearTimeout(hidePopupNotificationId);
+                        };
+                    };
+
+                    var helpOpen = false;
+                    var originalBackground = notificationElement.style.background;
+                    stndz.highlightPopupNotification = function() {
+                        notificationElement.style.background = '#FFFBCC';
+                        setTimeout(function() {
+                            notificationElement.style.background = originalBackground;
+                        }, 1000);
+
+                        notificationElement.style.height = '120px';
+                        helpOpen = true;
+                    };
+
+                    stndz.togglePopupNotificationHelp = function() {
+                        notificationElement.style.height = helpOpen ? '30px' : '120px';
+                        helpOpen = !helpOpen;
+                    };
+                }
+
+                break;
+
+            case 'stndz-popup-action':
+                stndz.stndzPopupAction && stndz.stndzPopupAction(event.data.option);
+                break;
+        }
+    }, false);
+
+    function allowPopupsOnThisPage() {
+        stndz.allowed = true;
+    }
+
+    function showPopupNotificationWindow(blockType, args, openPopupFunc) {
+        if (!showNotification)
+            return;
+
+        stndz.stndzPopupAction = function(option) {
+            popupBlockMessage.arguments = args;
+            popupBlockMessage.option = option;
+            window.postMessage(popupBlockMessage, '*');
+
+            if (option == 'once' || option == 'allow') {
+                allowPopupsOnThisPage();
+                openPopupFunc && openPopupFunc();
+            } else {
+                showNotification = false;
+            }
+        };
+
+        window.top.postMessage({
+            type: 'stndz-show-popup-notification',
+            iframeGuid: popupBlockMessage.iframeGuid,
+            blockType: blockType
+        }, '*');
+    }
+
+    function createNotificationOnPage() {
+        var style = document.createElement('style');
+        style.textContent = '.stndz-popup-notification {' +
+        'width: 670px;' +
+        'height: 30px;' +
+        'position: fixed;' +
+        'overflow: hidden;' +
+        'top: -40px;' +
+        'margin: 0 auto;' +
+        'z-index: 2147483647;' +
+        'left: 0px;' +
+        'right: 0px;' +
+        'background: rgb(240, 240, 240);' +
+        'border-radius: 0px 0px 5px 5px;' +
+        'border: solid 1px #999999;' +
+        'box-shadow: 0px 2px 5px #444444;' +
+        'border-top: none; ' +
+        'line-height: 31px;' +
+        'font-size: 12px;' +
+        'font-family: sans-serif;' +
+        'color: #59595c;' +
+        'text-align: center;' +
+        'direction: ltr;' +
+        'transition-duration: 500ms;}' +
+        '.stndz-button {' +
+        'padding: 3px 15px !important;' +
+        'border: solid 1px #a4a6aa !important;' +
+        'height: 25px !important;' +
+        'border-radius: 5px !important;' +
+        'background-color: #3058b0 !important;' +
+        'background: linear-gradient(#f5f5f5, #dfdfdf) !important;' +
+        'box-shadow: inset 0px 1px 0px #ffffff, inset 0 -1px 2px #acacac !important;' +
+        'color: #555555 !important;' +
+        'font-size: 12px !important;' +
+        'line-height: 16px !important;' +
+        'font-family: sans-serif !important;' +
+        'text-align: center !important;' +
+        'background-repeat: no-repeat !important;' +
+        'text-decoration: none !important;}' +
+        '.stndz-button:hover{' +
+        'background: linear-gradient(#eeeeee, #d1d1d1) !important;' +
+        'text-decoration: none !important;' +
+        'color: #555555 !important;}';
+        document.documentElement.appendChild(style);
+
+        var div = document.createElement('div');
+        div.setAttribute('class', 'stndz-popup-notification');
+        div.innerHTML = '<img src="chrome-extension://' + extensionId + '/views/web_accessible/images/icon.png" style="top: 5px; left: 5px;height: 20px; display: initial;position: absolute;">' +
+        '&nbsp;<b>Site Popup Blocked:</b>' +
+        '&nbsp;&nbsp;<a href="javascript:void(0)" id="stndz-popup-allow-once" class="stndz-button">Allow once</a>' +
+        '&nbsp;&nbsp;<a href="javascript:void(0)" id="stndz-popup-allow" class="stndz-button">Allow always</a>' +
+        '&nbsp;&nbsp;<a href="javascript:void(0)" id="stndz-popup-block" class="stndz-button">Block always</a>' +
+        '&nbsp;&nbsp;&nbsp;&nbsp;<a href="javascript:void(0)" id="stndz-popup-help"><img src="chrome-extension://' + extensionId + '/views/web_accessible/images/help.png" style="opacity: 0.3; position: absolute; top: 7px; display: initial;right: 30px;" /></a>' +
+        '&nbsp;<a href="javascript:void(0)" id="stndz-popup-close"><img src="chrome-extension://' + extensionId + '/views/web_accessible/images/close.png" style="opacity: 0.3; position: absolute; top: 7px; display: initial;right: 7px;" /></a>' +
+        '<br /><div style="line-height: 22px; text-align: left; padding: 0px 5px 0px 5px; font-size: 11px;">The site tried to open a popup and Stands blocked it.' +
+        '<br />if you don\'t trust this site you should click <b>"Block always"</b>, if you do click <b>"Allow always"</b>.' +
+        '<br />If you\'re not sure click <b>"Allow once"</b> which will open the popup and pause popup blocking for the current page visit.' +
+        '<br />You can always change your settings in the application window.</div>';
+        document.body.appendChild(div);
+
+        document.getElementById("stndz-popup-allow-once").addEventListener("click", function(event) { event.stopPropagation(); stndz.stndzPopupClicked("once") }, true);
+        document.getElementById("stndz-popup-allow").addEventListener("click", function(event) { event.stopPropagation(); stndz.stndzPopupClicked("allow") }, true);
+        document.getElementById("stndz-popup-block").addEventListener("click", function(event) { event.stopPropagation(); stndz.stndzPopupClicked("block") }, true);
+        document.getElementById("stndz-popup-help").addEventListener("click", function(event) { event.stopPropagation(); stndz.togglePopupNotificationHelp() }, true);
+        document.getElementById("stndz-popup-close").addEventListener("click", function(event) { event.stopPropagation(); stndz.hidePopupNotification(); }, true);
+
+        return div;
+    }
+})({"type":"popup-user-action","iframeGuid":"twen1ktG1iGDcoIEFPvVd0StjijfAqLnBFrn"},true, 'lgblnfidahcdcjddiepkckcfdhpknnjh', ["mediaserver","directrev\\.com","tradeadexchange\\.com","liveadexchanger\\.com","interyield\\.","ordingly\\.com","peritas247\\.info","goodbookbook\\.com","word-my\\.com","terraclicks\\.com","tracki112\\.com","popped","ahtamsu\\.ru","startnewtab\\.com","onclickads\\.net","europacash\\.com","wordkeyhelper\\.com","d1110e4\\.se","buzzonclick\\.com","adultadworld\\.com","3wr110\\.net","ads\\.xladzop\\.com","mtagmonetizationc\\.com","ad\\.propellerads\\.com","popmyads\\.com","popunderclick\\.com","pipeaota\\.com","expocrack\\.com","trafficforce\\.com","poprockets\\.info","trustedsurf\\.com","smartnewtab\\.com","wonderlandads\\.com","admediatracker\\.com","n\\d{3}adserv\\.com","adland\\.co","adexc\\.net","buzzadexchange\\.com","104\\.197\\.4\\.220","xmediaserve\\.com","popcash\\.net","adpop-\\d\\.com","adk2x\\.com","adplxmd\\.com","exoclick\\.com","bounceads\\.net","whoads\\.net","onclickpredictiv\\.com","installation\\.club","advertiserurl\\.com","pureadexchange\\.com"]);</script><style>iframe[id*="google_ads_iframe_"] { display: none !important; } </style>
+    <title>Sound of the Block chain</title>
+    <meta name="description" content="An audio-visual representation of Bitcoin data">
+
+    <link rel="author" href="https://plus.google.com/u/0/101045914012403241106">
+    <link rel="publisher" href="https://plus.google.com/u/0/113654230940219159467/">
+
+    <meta property="og:locale" content="en_GB">
+    <meta property="og:title" content="sound of the block chain">
+    <meta property="og:description" content="an audio-visual representation of Bitcoin data">
+    <meta property="og:image" content="http://oacdesigns.github.io/bitcoin-sound-visualiser/screenshot.jpg">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@oacdesigns">
+    <meta name="twitter:creator" content="@oacdesigns">
+
+    <link href="./Sound_files/css" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="./Sound_files/foundation.css" type="text/css" media="all">
+    <link rel="stylesheet" href="./Sound_files/style.css" type="text/css" media="all">
+
+    <script src="./Sound_files/jquery.min.js"></script>
+    <script src="./Sound_files/webaudiox.js"></script>
+    <script src="./Sound_files/wad.js"></script>
+
+    <script src="./Sound_files/foundation.min.js"></script><meta class="foundation-data-attribute-namespace"><meta class="foundation-mq-xxlarge"><meta class="foundation-mq-xlarge-only"><meta class="foundation-mq-xlarge"><meta class="foundation-mq-large-only"><meta class="foundation-mq-large"><meta class="foundation-mq-medium-only"><meta class="foundation-mq-medium"><meta class="foundation-mq-small-only"><meta class="foundation-mq-small"><style></style>
+
+    <script>
+        var generalInstrumentSettings = {};
+        var timeout;
+        var instruments = [];   //array of instruments 
+        var score = [];         //array of instructions to execute at each semi-quaver
+        var position = 0;       //current position of the performance in the score
+        var beatTime;
+        var semiquaverTime;
+        var bpm = 100;
+        var playing = [];       //current notes being played
+        var bgColor = ['F', 'F', 'F', 'F', 'F', 'F', 'F']; //bg color, controlled by the sounds
+        var bar = 1;
+        var xLength;    //x length of vis tiles
+        var yLength;    //y length of vis tiles
+        var currentCol = 0;
+        var currentRow = 0;
+
+        function getData(block) {
+            $('.song-details').html("<h3>Loading...</h3>");
+            //clear old score
+            $('.parallax-content .score').html('');
+
+            console.log('get block '+block);
+            $.ajax({
+              url: "https://bitcoin-sound-visualiser.herokuapp.com/getData.php",
+              data: {block: block},
+              success: function(result){
+                //get the score from the data
+                score = result.score;
+
+                //name of this song
+                var detailsHTML = "<h3>Bitcoin Symphony No."+result.blockHeight+"</h3>"
+                            + "<p>A composition from block "+result.blockHash+"</br>"
+                            + "In 4/4 time with the "+result.scale+" scale at "+bpm+"bpm</p>";
+                $('.song-details').html(detailsHTML);
+                //clear old score
+                $('.parallax-content .score').html('');
+
+                //initialise the visualisations
+                initViz(parseInt(result.totalTransactions));
+
+                //start the performance
+                performer();
+              },
+              error: function(xhr){
+                console.log('error', xhr.responseText);
+                $('.song-details').html("<h3>An Error Occurred...</h3><p>Please try again.</p>");
+                $('#stopSong').fadeOut(500, function(){
+                    $('#startSong').fadeIn(500);
+                });
+              },
+              dataType: 'json'
+            });
+        }
+
+        function initViz(totalTxs){
+            //initialise the vis - calculate the tile sizes
+            xLength = Math.floor(1920/22);
+            yLength = Math.floor(1080/22);
+            console.log(xLength, yLength);
+
+            currentCol = 0;
+            currentRow = 0;
+
+            //clear any previous vis
+            var canvas=document.getElementById("myCanvas");
+            var ctx=canvas.getContext("2d");
+            ctx.clearRect( 0 , 0 , canvas.width, canvas.height );
+        }
+
+        function drawTile(color) {
+            //draw a tile on grid
+            var xPoint = xLength*(currentCol);
+            var yPoint = yLength*(currentRow);
+
+            var c=document.getElementById("myCanvas");
+            var ctx=c.getContext("2d");
+            ctx.fillStyle=color;
+            ctx.fillRect(xPoint, yPoint, xLength, yLength);
+        }
+
+        function stopPerformance(){
+            if ( position>0 ) {
+                instruments[0].stop('inst1');
+                instruments[1].stop('inst2');
+                instruments[2].stop('inst3');
+                instruments[3].stop('inst4');
+                instruments[3].stop('inst5');
+            }
+
+            clearTimeout(timeout);
+        }
+
+        function initPerformance(){
+            //stop any existing performance
+            stopPerformance();
+
+            //reset the score position
+            position = 0;
+            playing = [];
+
+            //calculate the speed
+            beatTime = 60000/bpm;
+            semiquaverTime = beatTime/16;
+
+            var sine     = new Wad({ source : 'sine' });
+            var square   = new Wad({ source : 'square' });
+            var triangle = new Wad({ source : 'triangle' });
+
+            //var tripleOscillator = new Wad.Poly();
+            //
+            generalInstrumentSettings = {
+                source  : 'sawtooth',
+                label: 'inst1',
+                volume  : 1.0,   // Peak volume can range from 0 to an arbitrarily high number, but you probably shouldn't set it higher than 1.
+                loop    : false, // If true, the audio will loop. This parameter only works for audio clips, and does nothing for oscillators. 
+                pitch   : 'A4',  // Set a default pitch on the constuctor if you don't want to set the pitch on play().
+                detune  : 0,     // Set a default detune on the constructor if you don't want to set detune on play(). Detune is measured in cents. 100 cents is equal to 1 semitone.
+                panning : -5,    // Horizontal placement of the sound source. Sensible values are from 10 to -10.
+                env     : {      // This is the ADSR envelope.
+                    attack  : 0.1,  // Time in seconds from onset to peak volume.  Common values for oscillators may range from 0.05 to 0.3.
+                    decay   : 0.1,  // Time in seconds from peak volume to sustain volume.
+                    sustain : 1.0,  // Sustain volume level. This is a percent of the peak volume, so sensible values are between 0 and 1.
+                    hold    : 1.14, // Time in seconds to maintain the sustain volume level. If this is not set to a lower value, oscillators must be manually stopped by calling their stop() method.
+                    release : 0     // Time in seconds from the end of the hold period to zero volume, or from calling stop() to zero volume.
+                },
+                /*
+                filter  : {
+                    type      : 'lowpass', // What type of filter is applied.
+                    frequency : 600,       // The frequency, in hertz, to which the filter is applied.
+                    q         : 1,         // Q-factor.  No one knows what this does. The default value is 1. Sensible values are from 0 to 10.
+                    env       : {          // Filter envelope.
+                        frequency : 800, // If this is set, filter frequency will slide from filter.frequency to filter.env.frequency when a note is triggered.
+                        attack    : 0.5  // Time in seconds for the filter frequency to slide from filter.frequency to filter.env.frequency
+                    }
+                },
+                */
+                /*
+                reverb  : {
+                    wet     : 1,                                            // Volume of the reverberations.
+                    impulse : 'http://www.myServer.com/path/to/impulse.wav' // A URL for an impulse response file, if you do not want to use the default impulse response.
+                },
+                */
+               /*
+                delay   : {
+                    delayTime : .2,  // Time in seconds between each delayed playback.
+                    wet       : .25, // Relative volume change between the original sound and the first delayed playback.
+                    feedback  : .25, // Relative volume change between each delayed playback and the next. 
+                },
+                */
+               /*
+                vibrato : { // A vibrating pitch effect.  Only works for oscillators.
+                    shape     : 'sine', // shape of the lfo waveform. Possible values are 'sine', 'sawtooth', 'square', and 'triangle'.
+                    magnitude : 3,      // how much the pitch changes. Sensible values are from 1 to 10.
+                    speed     : 4,      // How quickly the pitch changes, in cycles per second.  Sensible values are from 0.1 to 10.
+                    attack    : 0       // Time in seconds for the vibrato effect to reach peak magnitude.
+                },
+                */
+                /*
+                tremolo : { // A vibrating volume effect.
+                    shape     : 'sine', // shape of the lfo waveform. Possible values are 'sine', 'sawtooth', 'square', and 'triangle'.
+                    magnitude : 3,      // how much the volume changes. Sensible values are from 1 to 10.
+                    speed     : 4,      // How quickly the volume changes, in cycles per second.  Sensible values are from 0.1 to 10.
+                    attack    : 0       // Time in seconds for the tremolo effect to reach peak magnitude.
+                }
+                */
+            };
+
+            //init the instruments
+            var settings = { source : 'sine' };
+            settings = $.extend({}, generalInstrumentSettings, settings);
+            instruments[0] = new Wad(settings);
+            var settings = { source : 'square' };
+            settings = $.extend({}, generalInstrumentSettings, settings);
+            instruments[1] = new Wad(settings);
+            var settings = { source : 'triangle' };
+            settings = $.extend({}, generalInstrumentSettings, settings);
+            instruments[2] = new Wad(settings);
+            var settings = { source : 'sawtooth' };
+            settings = $.extend({}, generalInstrumentSettings, settings);
+            instruments[3] = new Wad(settings);
+            var settings = { source : 'square' };
+            settings = $.extend({}, generalInstrumentSettings, settings);
+            instruments[4] = new Wad.Poly({
+                recConfig : { // The Recorder configuration object. The only required property is 'workerPath'.
+                    workerPath : '/lib/wad/src/Recorderjs/recorderWorker.js' // The path to the Recorder.js web worker script.
+                }
+            });
+            instruments[4].add(sine).add(square).add(triangle);
+        }
+
+        function performer() {
+            //main loop responsible for performing sounds
+            if ( !score[position] ) {
+                //finished
+                stopPerformance();
+
+                $('#stopSong').fadeOut(500, function(){
+                    $('#startSong').fadeIn(500);
+                });
+
+                $('.bar').html('<span class="fin">Fini</span>');
+                return false;
+            }
+
+            //set the visual colour
+            bgColor[5] = 5;
+
+            //console.log(playing);
+            var noteColor = bgColor.join('');
+            //$('.parallax-background').css('background', '#'+noteColor.substring(0, 6));
+            //console.log("set color to "+noteColor.substring(0, 6));
+
+
+            //Instrument 1
+            //do we need to play in this increment?
+            if (score[position][0]) {
+                playing[0] = score[position][0]['note'];
+                bgColor[0] = playing[0].substring(0,1);
+                var noteLength = semiquaverTime*score[position][0]['length']/1000;
+                instruments[0].stop('inst1');
+                var settings = {
+                    volume  : 0.8,
+                    wait    : 0.02,
+                    loop    : false,
+                    pitch   : score[position][0]['note'],
+                    label   : 'inst1',
+                    env     : {hold : noteLength},
+                    panning : score[position][0]['pan'],
+                    filter  : {frequency : 900},
+                    delay   : {delayTime : .8}
+                };
+                settings = $.extend({}, generalInstrumentSettings, settings);
+                instruments[0].play(settings);
+
+                drawTile('#'+noteColor.substring(0, 6));
+                //draw a tile for this note
+                currentCol ++;
+                if (currentCol>22) {
+                    currentCol = 0
+                    currentRow++;
+                }
+            }
+
+            //Instrument 2
+            //do we need to play in this increment?
+            if (score[position][1]) {
+                playing[1] = score[position][1]['note'];
+                bgColor[1] = playing[1].substring(1,2);
+                var noteLength = semiquaverTime*score[position][1]['length']/1000;
+                instruments[1].stop('inst2');
+                var settings = {
+                    volume  : 0.8,
+                    wait    : 0.02,
+                    loop    : false,
+                    pitch   : score[position][1]['note'],
+                    label   : 'inst2',
+                    env     : {hold : noteLength},
+                    panning : score[position][1]['pan'],
+                    filter  : {frequency : 900},
+                    delay   : {delayTime : .8}
+                };
+                settings = $.extend({}, generalInstrumentSettings, settings);
+                instruments[1].play(settings);
+
+                drawTile('#'+noteColor.substring(0, 6));
+                //draw a tile for this note
+                currentCol ++;
+                if (currentCol>22) {
+                    currentCol = 0
+                    currentRow++;
+                }
+            }
+
+            //Instrument 3
+            //do we need to play in this increment?
+            if (score[position][2]) {
+                playing[2] = score[position][2]['note'];
+                bgColor[2] = playing[2].substring(0,1);
+                var noteLength = semiquaverTime*score[position][2]['length']/1000;
+                instruments[2].stop('inst3');
+                var settings = {
+                    volume  : 0.8,
+                    wait    : 0.02,
+                    loop    : false,
+                    pitch   : score[position][2]['note'],
+                    label   : 'inst3',
+                    env     : {hold : noteLength},
+                    panning : score[position][2]['pan'],
+                    filter  : {frequency : 900},
+                    delay   : {delayTime : .8}
+                };
+                settings = $.extend({}, generalInstrumentSettings, settings);
+                instruments[2].play(settings);
+
+                drawTile('#'+noteColor.substring(0, 6));
+                //draw a tile for this note
+                currentCol ++;
+                if (currentCol>22) {
+                    currentCol = 0
+                    currentRow++;
+                }
+            }
+
+            //Instrument 4
+            //do we need to play in this increment?
+            if (score[position][3]) {
+                playing[3] = score[position][3]['note'];
+                bgColor[3] = playing[3].substring(1,2);
+                var noteLength = semiquaverTime*score[position][3]['length']/1000;
+                instruments[3].stop('inst4');
+                var settings = {
+                    volume  : 0.8,
+                    wait    : 0.02,
+                    loop    : false,
+                    pitch   : score[position][3]['note'],
+                    label   : 'inst4',
+                    env     : {hold : noteLength},
+                    panning : score[position][3]['pan'],
+                    filter  : {frequency : 900},
+                    delay   : {delayTime : .8}
+                };
+                settings = $.extend({}, generalInstrumentSettings, settings);
+                instruments[3].play(settings);
+
+                drawTile('#'+noteColor.substring(0, 6));
+                //draw a tile for this note
+                currentCol ++;
+                if (currentCol>22) {
+                    currentCol = 0
+                    currentRow++;
+                }
+            }
+
+            //Instrument 5
+            //do we need to play in this increment?
+            if (score[position][4]) {
+                playing[4] = score[position][4]['note'];
+                bgColor[4] = playing[4].substring(0,1);
+                var noteLength = semiquaverTime*score[position][3]['length']/1000;
+                instruments[4].stop('inst5');
+                var settings = {
+                    volume  : 0.2,
+                    wait    : 0.02,
+                    loop    : false,
+                    pitch   : score[position][4]['note'],
+                    label   : 'inst5',
+                    env     : {hold : noteLength},
+                    panning : score[position][4]['pan'],
+                    filter  : {type : 'highpass', frequency : 1000, q : 5},
+                    delay   : {delayTime : .8}
+                };
+                settings = $.extend({}, generalInstrumentSettings, settings);
+                instruments[4].play(settings);
+
+                drawTile('#'+noteColor.substring(0, 6));
+                //draw a tile for this note
+                currentCol ++;
+                if (currentCol>22) {
+                    currentCol = 0
+                    currentRow++;
+                }
+            }
+
+
+            //write the score as we go along
+            bar = Math.floor(position/16/4)+1;
+            beat = (Math.floor(position/16) % 4)+1;
+            $('.bar').html('Bar '+bar+'<sup><small>'+beat+'</small></sup>');
+
+            $('.parallax-content .score').append(playing+' ');
+
+            //increment the score position
+            position ++;
+            
+            //set the next loop interval
+            timeout = setTimeout(performer, semiquaverTime);
+        }
+
+
+        $(document).ready(function(){
+            $('#stopSong').fadeOut(0);
+
+            $('#startSong').submit(function(event){
+                event.preventDefault();
+                //get the block height
+                var blockHeight = parseInt($('#blockHeight').val());
+                if(isNaN(blockHeight)) {
+                    blockHeight = 'latest';
+                }
+                //init the performer
+                initPerformance();
+                //get the data and start the performance
+                getData(blockHeight);
+
+                $('#startSong').fadeOut(500, function(){
+                    $('#stopSong').fadeIn(500);
+                });
+
+                $('.parallax-content').addClass('show');
+            });
+            $('.stopIt').click('click', function(){
+                stopPerformance();
+                $('#stopSong').fadeOut(500, function(){
+                    $('#startSong').fadeIn(500);
+                });
+                $('.parallax-content').removeClass('show');
+                $('.parallax-content .score').html('');
+            });
+
+        });
+    </script>
+<link id="vk_link" type="text/css" rel="stylesheet" href="chrome-extension://bafgbdpfglndjaohfahffcjmcdlhncnj/assets/css/vk-saver_style_2.0.css"></head>
+<body>
+    <div class="container">
+    </div>
+
+    <div class="parallax-background">
+        <a href="https://github.com/OACDesigns/bitcoin-sound-visualiser"><img style="position: absolute; top: 0; left: 0; border: 0;" src="./Sound_files/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f6c6566745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png"></a>
+        <canvas id="myCanvas" width="1920" height="1080"></canvas>
+        <div class="intro-text">
+            <h1>Sound of the Block Chain</h1>
+            <h3 class="bar"></h3>
+            <p><i class="fi-arrow-down"></i></p>
+        </div>
+        <form id="startSong">
+            <div class="row">
+                <div class="large-6 small-centered columns">
+                    <div class="row collapse">
+                        <div class="small-10 columns">
+                            <input type="text" id="blockHeight" placeholder="block height...">
+                        </div>
+                        <div class="small-2 columns">
+                            <button href="#" class="button postfix success letsGo">Go</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <div id="stopSong" class="text-center" style="display: none;">
+            <a href="http://oacdesigns.github.io/bitcoin-sound-visualiser/#" class="button alert small stopIt">Please Stop!!!</a>
+        </div>
+    </div>
+
+    <div class="parallax-content">
+        <div class="song-details"></div>
+        <div class="score"></div>
+    </div>              
+
+<script src="./Sound_files/saved_resource"></script></body></html>

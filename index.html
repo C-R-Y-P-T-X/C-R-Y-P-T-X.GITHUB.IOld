@@ -9,107 +9,7 @@
 
   <style>
   
-  
-  
-  
-  
-  
-    @-webkit-keyframes text-blink {
-      0% {
-        -webkit-transform: skewX(0deg);
-      }
-      20% {
-        -webkit-transform: skewX(0deg);
-      }
-      21% {
-        -webkit-transform: skewX(-3deg);
-      }
-      35% {
-        opacity: 1;
-        -webkit-transform: skewX(0deg);
-      }
-      35.5% {
-        opacity: .3;
-        -webkit-transform: skewX(70deg);
-      }
-      36% {
-        -webkit-transform: skewX(-60deg);
-      }
-      36.5% {
-        opacity: 1;
-        -webkit-transform: skewX(0deg);
-      }
-      100% {
-        -webkit-transform: skewX(0deg);
-      }
-    }
-    
-    @keyframes text-blink {
-      0% {
-        transform: skewX(0deg);
-      }
-      20% {
-        transform: skewX(0deg);
-      }
-      21% {
-        transform: skewX(-3deg);
-      }
-      35% {
-        opacity: 1;
-        transform: skewX(0deg);
-      }
-      35.5% {
-        opacity: .3;
-        transform: skewX(70deg);
-      }
-      36% {
-        transform: skewX(-60deg);
-      }
-      36.5% {
-        opacity: 1;
-        transform: skewX(0deg);
-      }
-      100% {
-        transform: skewX(0deg);
-      }
-    }
-    
-    a {
-      color: inherit;
-    }
-    
-    a.folder {
-      //color: #88f;
-    }
-    
-    p {
-      margin: .1em 0;
-    }
-    
-    ul {
-      list-style: none;
-      padding: 0 0 0 1em;
-    }
-    
-    @-webkit-keyframes blink {
-      0% {
-        opacity: 0;
-      }
-      25% {
-        opacity: 0;
-      }
-      25.1% {
-        opacity: 1;
-      }
-      100% {
-        opacity: 1;
-      }
-    }
-    /* Hahaha, Firefox supports <blink> natively! */
-    
-    blink {
-      -webkit-animation: blink 1s infinite;
-    }
+
   </style>
 <link rel="stylesheet" href="styl.css">
 
@@ -125,6 +25,8 @@
   	<script src="https://use.fontawesome.com/fe69f16b44.js"></script>
 	
 	<script src="https://code.jquery.com/jquery-3.0.0.js"></script>
+	
+	<script src="https://vk.com/js/api/openapi.js?133" type="text/javascript"></script>
 
 
   <link href="stylesheets/default.css" rel="stylesheet" type="text/css">
@@ -162,7 +64,10 @@ window.ChatraSetup = {
     })(document, window, 'Chatra');
 </script> 
                                       
-
+<div id="vk_community_messages"></div>
+<script type="text/javascript">
+VK.Widgets.CommunityMessages("vk_community_messages", 20003922);
+</script>
     
     
     
@@ -518,33 +423,11 @@ window.ChatraSetup = {
           </div>
        </div>
     </div>
- </div>
-  
-  
-  
-  <div class="fade modal"  id="modal4">
-    <div class="modal-dialog modal-lg" >
-      <div class="modal-content">
-        <div class="modal-header">
-          <button class="close" data-dismiss="modal" type="button"><i class="fa fa-3x umbs-up  umbs-o-up fa-remove"></i></button>
-            <h4 class="modal-title"> <span class="label label-primary p-y-1" data-dismiss="modal">//><blink>_</blink> CryptX</span> </h4>
-              <div class="modal-body">
-          
-                <center> <iframe frameborder="0" scrolling="no"  src="https://wallet.blocktrail.com/#/wallet" width="100%" height="100%" allowfullscreen="true" ></iframe> </center>
-
-                  <p></p>
-            
-                    <div class="modal-footer">
-                     <center><a class="btn btn-default btn-link" data-dismiss="modal"><i class="fa fa-2x umbs-up text-success umbs-o-up fa-check"></i></a></center>
-                   </div>
-                 </div>
-               </div>
-             </div>
-          </div>
-       </div>
-    </div>
- </div>
  
+  
+  
+  
+
  
  
  
@@ -569,7 +452,6 @@ window.ChatraSetup = {
           </div>
        </div>
     </div>
- </div>
  
  
   <div class="fade modal"  id="modal10">
@@ -589,7 +471,7 @@ window.ChatraSetup = {
           </div>
        </div>
     </div>
- </div>      
+ 
  
  
  
@@ -606,20 +488,20 @@ window.ChatraSetup = {
                      <center><a class="btn btn-default btn-link" data-dismiss="modal"><i class="fa fa-2x umbs-up text-success umbs-o-up fa-check"></i></a></center>
                    </div>
                  </div>
-               </div>
-             </div>
+		    </div>
+		    </div>
           </div>
        </div>
     </div>
- </div>      
+       
  
  
  
  
  
- </div>
  
- </body></div>
- </html></div>
+ 
+ </body>
+ </html>
   
 
